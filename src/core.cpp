@@ -1,4 +1,5 @@
 #include "core.hpp"
+#include "glwx/texture.hpp"
 
 #include <memory>
 
@@ -22,29 +23,48 @@ void init(const char* title, uint32_t xres, uint32_t yres)
     plat.window = glwx::makeWindow(title, xres, yres).value();
 }
 
+int get_scancode(const char* name) {
+    return SDL_GetScancodeFromName(name);
+}
+
 bool process_events(InputState* state)
 {
+    std::memset(state->keyboard_pressed.data(), 0, state->keyboard_pressed.size());
+    std::memset(state->keyboard_released.data(), 0, state->keyboard_released.size());
+
     SDL_Event event;
     while (SDL_PollEvent(&event) != 0) {
         switch (event.type) {
         case SDL_QUIT:
             return false;
         case SDL_KEYDOWN:
+            assert(event.key.keysym.scancode < MaxNumScancodes);
+            state->keyboard_state[event.key.keysym.scancode] = true;
+            state->keyboard_pressed[event.key.keysym.scancode] += 1;
             if (event.key.keysym.sym == SDLK_ESCAPE) {
                 return false;
             }
             break;
         case SDL_KEYUP:
+            assert(event.key.keysym.scancode < MaxNumScancodes);
+            state->keyboard_state[event.key.keysym.scancode] = false;
+            state->keyboard_released[event.key.keysym.scancode] += 1;
             break;
         }
     }
     return true;
+}
+
+float get_time()
+{
+    return glwx::getTime();
 }
 }
 
 struct Gfx {
     std::unique_ptr<glwx::SpriteRenderer> renderer;
     glm::mat4 projection;
+    std::array<glw::Texture, 64> textures;
 
     static Gfx& instance()
     {
@@ -78,5 +98,27 @@ void render_end()
 {
     Gfx::instance().renderer->flush();
     Platform::instance().window.swap();
+}
+
+Texture* load_texture(std::string_view path) {
+    auto& gfx = Gfx::instance();
+    size_t tex_idx = 0;
+    while(tex_idx < gfx.textures.size()
+          && gfx.textures[tex_idx].getTarget() != glw::Texture::Target::Invalid) {
+        tex_idx++;
+    }
+    assert(tex_idx < gfx.textures.size());
+    gfx.textures[tex_idx] = glwx::makeTexture2D(path, false).value();
+    return (Texture*)&gfx.textures[tex_idx];
+}
+
+void draw(const Texture* texture, float x, float y)
+{
+    auto tex = (const glw::Texture*)texture;
+    assert(tex->getTarget() != glw::Texture::Target::Invalid);
+    auto& renderer = Gfx::instance().renderer;
+    const auto trafo =  glwx::Transform2D(glm::vec2(x, y), 0.0f, glm::vec2(1.0f),
+        glm::vec2(tex->getWidth(), tex->getHeight()) * -0.5f);
+    renderer->draw(*tex, trafo);
 }
 }
