@@ -1,10 +1,25 @@
 #include "engine.hpp"
 
+#include "fswatcher.hpp"
+
+#include <fmt/core.h>
+
 EngineState* engine_state;
 
 void set_engine_state(EngineState* state)
 {
     engine_state = state;
+}
+
+void reload_image(void* ctx, std::string_view path)
+{
+    const auto idx = (uintptr_t)ctx;
+    const auto tex = gfx::load_texture(path);
+    if (!tex) {
+        fmt::println("Could not reload {}", path);
+        return;
+    }
+    engine_state->textures[idx] = tex;
 }
 
 extern "C" uint32_t ng_load_image(const char* path)
@@ -15,6 +30,8 @@ extern "C" uint32_t ng_load_image(const char* path)
     }
     assert(idx < engine_state->textures.size());
     engine_state->textures[idx] = gfx::load_texture(path);
+    assert(engine_state->textures[idx]);
+    fsw::add_watch(path, reload_image, (void*)static_cast<uintptr_t>(idx));
     return idx + 1; // 0 is invalid
 }
 

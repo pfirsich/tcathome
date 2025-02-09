@@ -110,7 +110,11 @@ Texture* load_texture(std::string_view path)
         tex_idx++;
     }
     assert(tex_idx < gfx.textures.size());
-    gfx.textures[tex_idx] = glwx::makeTexture2D(path, false).value();
+    auto tex = glwx::makeTexture2D(path, false);
+    if (!tex) {
+        return nullptr;
+    }
+    gfx.textures[tex_idx] = std::move(tex.value());
     return (Texture*)&gfx.textures[tex_idx];
 }
 

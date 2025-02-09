@@ -1,5 +1,6 @@
 #include "core.hpp"
 #include "engine.hpp"
+#include "fswatcher.hpp"
 #include "random.hpp"
 
 int main(int, char**)
@@ -21,6 +22,8 @@ int main(int, char**)
         const auto now = platform::get_time();
         const auto dt = now - time;
         time = now;
+
+        fsw::update();
 
         gfx::render_begin();
         ng_draw_sprite(sprite, x, y);
