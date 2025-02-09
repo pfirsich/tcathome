@@ -1,0 +1,3 @@
+[submodule "deps/glwrap"]
+	path = deps/glwrap
+	url = https://github.com/pfirsich/glwrap
