@@ -1,7 +1,23 @@
+#include <string>
+
 #include "core.hpp"
 #include "engine.hpp"
 #include "fswatcher.hpp"
 #include "random.hpp"
+#include "gamecode.hpp"
+
+#include <fmt/core.h>
+
+void reload_game_code(void* ctx, std::string_view path)
+{
+    auto engine_state = (EngineState*)ctx;
+    auto gc = gamecode::load(std::string(path).c_str());
+    if (!gc) {
+        fmt::println("Could not reload game code");
+        return;
+    }
+    engine_state->game_code = gc;
+}
 
 int main(int, char**)
 {
@@ -9,13 +25,12 @@ int main(int, char**)
     gfx::init();
 
     EngineState engine_state;
-    rng::init_state(&engine_state.random_state);
     set_engine_state(&engine_state);
 
-    const auto sprite = ng_load_image("assets/croc.png");
-
-    const auto x = 200.0f + ng_randomf() * 1200.0f;
-    const auto y = 200.0f + ng_randomf() * 500.0f;
+    rng::init_state(&engine_state.random_state);
+    engine_state.game_code = gamecode::load("game/game.c");
+    fsw::add_watch("game/game.c", reload_game_code, &engine_state);
+    auto state = gamecode::load(engine_state.game_code);
 
     float time = platform::get_time();
     while (platform::process_events(&engine_state.input_state)) {
@@ -25,8 +40,10 @@ int main(int, char**)
 
         fsw::update();
 
+        gamecode::update(engine_state.game_code, state, time, dt);
+
         gfx::render_begin();
-        ng_draw_sprite(sprite, x, y);
+        gamecode::render(engine_state.game_code, state);
         gfx::render_end();
     }
 }

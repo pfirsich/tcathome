@@ -5,6 +5,7 @@
 
 #include "core.hpp"
 #include "random.hpp"
+#include "gamecode.hpp"
 
 struct Texture;
 
@@ -13,6 +14,7 @@ struct EngineState {
     rng::RandomState random_state;
     // This provides a mapping from image handle to texture
     std::array<gfx::Texture*, 16> textures = {};
+    GameCode* game_code;
 };
 static_assert(std::is_trivially_copyable_v<EngineState>);
 

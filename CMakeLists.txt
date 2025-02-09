@@ -20,7 +20,16 @@ include(cmake/tinycc.cmake)
 
 add_subdirectory(deps/glwrap)
 
-add_executable(gvm src/main.cpp src/core.cpp src/engine.cpp src/random.cpp src/fswatcher.cpp)
+set(GVM_SOURCES
+  src/main.cpp
+  src/core.cpp
+  src/engine.cpp
+  src/random.cpp
+  src/fswatcher.cpp
+  src/gamecode.cpp
+)
+
+add_executable(gvm ${GVM_SOURCES})
 target_link_libraries(gvm PRIVATE glwx)
 target_link_libraries(gvm PRIVATE tcc)
 gvm_set_wall(gvm)

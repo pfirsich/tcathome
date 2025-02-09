@@ -22,6 +22,10 @@ void reload_image(void* ctx, std::string_view path)
     engine_state->textures[idx] = tex;
 }
 
+extern "C" void* ng_alloc(size_t size) {
+    return malloc(size);
+}
+
 extern "C" uint32_t ng_load_image(const char* path)
 {
     uint32_t idx = 0;
