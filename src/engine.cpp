@@ -2,14 +2,15 @@
 
 EngineState* engine_state;
 
-void set_engine_state(EngineState* state) {
+void set_engine_state(EngineState* state)
+{
     engine_state = state;
 }
 
 extern "C" uint32_t ng_load_image(const char* path)
 {
     uint32_t idx = 0;
-    while(idx < engine_state->textures.size() && engine_state->textures[idx] != nullptr) {
+    while (idx < engine_state->textures.size() && engine_state->textures[idx] != nullptr) {
         idx++;
     }
     assert(idx < engine_state->textures.size());

@@ -23,7 +23,8 @@ void init(const char* title, uint32_t xres, uint32_t yres)
     plat.window = glwx::makeWindow(title, xres, yres).value();
 }
 
-int get_scancode(const char* name) {
+int get_scancode(const char* name)
+{
     return SDL_GetScancodeFromName(name);
 }
 
@@ -100,11 +101,12 @@ void render_end()
     Platform::instance().window.swap();
 }
 
-Texture* load_texture(std::string_view path) {
+Texture* load_texture(std::string_view path)
+{
     auto& gfx = Gfx::instance();
     size_t tex_idx = 0;
-    while(tex_idx < gfx.textures.size()
-          && gfx.textures[tex_idx].getTarget() != glw::Texture::Target::Invalid) {
+    while (tex_idx < gfx.textures.size()
+        && gfx.textures[tex_idx].getTarget() != glw::Texture::Target::Invalid) {
         tex_idx++;
     }
     assert(tex_idx < gfx.textures.size());
@@ -117,7 +119,7 @@ void draw(const Texture* texture, float x, float y)
     auto tex = (const glw::Texture*)texture;
     assert(tex->getTarget() != glw::Texture::Target::Invalid);
     auto& renderer = Gfx::instance().renderer;
-    const auto trafo =  glwx::Transform2D(glm::vec2(x, y), 0.0f, glm::vec2(1.0f),
+    const auto trafo = glwx::Transform2D(glm::vec2(x, y), 0.0f, glm::vec2(1.0f),
         glm::vec2(tex->getWidth(), tex->getHeight()) * -0.5f);
     renderer->draw(*tex, trafo);
 }
