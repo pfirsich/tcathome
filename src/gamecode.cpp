@@ -2,8 +2,8 @@
 
 #include "engine.hpp"
 
-#include <tcc.h>
 #include <fmt/core.h>
+#include <tcc.h>
 
 using LoadFunc = void*();
 using UpdateFunc = void(void*, float t, float dt);

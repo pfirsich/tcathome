@@ -4,8 +4,8 @@
 #include <type_traits>
 
 #include "core.hpp"
-#include "random.hpp"
 #include "gamecode.hpp"
+#include "random.hpp"
 
 struct Texture;
 

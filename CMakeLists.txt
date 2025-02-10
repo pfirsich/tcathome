@@ -21,12 +21,12 @@ include(cmake/tinycc.cmake)
 add_subdirectory(deps/glwrap)
 
 set(GVM_SOURCES
-  src/main.cpp
   src/core.cpp
   src/engine.cpp
-  src/random.cpp
   src/fswatcher.cpp
   src/gamecode.cpp
+  src/main.cpp
+  src/random.cpp
 )
 
 add_executable(gvm ${GVM_SOURCES})
