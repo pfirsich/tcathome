@@ -26,6 +26,7 @@ set(GVM_SOURCES
   src/fswatcher.cpp
   src/gamecode.cpp
   src/main.cpp
+  src/memtrack.cpp
   src/random.cpp
 )
 

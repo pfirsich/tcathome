@@ -1,6 +1,7 @@
 #include "engine.hpp"
 
 #include "fswatcher.hpp"
+#include "memtrack.hpp"
 
 #include <fmt/core.h>
 
@@ -22,8 +23,11 @@ void reload_image(void* ctx, std::string_view path)
     engine_state->textures[idx] = tex;
 }
 
-extern "C" void* ng_alloc(size_t size) {
-    return malloc(size);
+extern "C" void* ng_alloc(size_t size)
+{
+    auto ptr = malloc(size);
+    memtrack::track(ptr, size);
+    return ptr;
 }
 
 extern "C" uint32_t ng_load_image(const char* path)

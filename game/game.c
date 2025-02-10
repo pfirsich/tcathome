@@ -50,7 +50,7 @@ void update(State* state, float t, float dt)
 {
     const int move_x = ng_is_key_down("d") - ng_is_key_down("a");
     const int move_y = ng_is_key_down("s") - ng_is_key_down("w");
-    const float speed = 400.0f;
+    const float speed = 200.0f;
     state->player.pos.x += move_x * speed * dt;
     state->player.pos.y += move_y * speed * dt;
 
