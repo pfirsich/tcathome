@@ -61,3 +61,15 @@ extern "C" float ng_randomf()
 {
     return rng::randomf(&engine_state->random_state);
 }
+
+extern "C" void ng_break()
+{
+    gamecode::ng_break();
+}
+
+extern "C" void ng_break_if(bool cond)
+{
+    if (cond) {
+        ng_break();
+    }
+}

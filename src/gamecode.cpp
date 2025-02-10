@@ -1,9 +1,11 @@
 #include "gamecode.hpp"
 
-#include "engine.hpp"
+#include <csetjmp>
 
 #include <fmt/core.h>
 #include <tcc.h>
+
+#include "engine.hpp"
 
 using LoadFunc = void*();
 using UpdateFunc = void(void*, float t, float dt);
@@ -17,6 +19,8 @@ struct GameCode {
 };
 
 std::array<GameCode, 256> game_codes;
+std::jmp_buf jump_buf;
+bool in_callback = false;
 
 namespace gamecode {
 GameCode* load(const char* path)
@@ -66,13 +70,33 @@ void* load(GameCode* gc)
     return gc->load();
 }
 
-void update(GameCode* gc, void* state, float t, float dt)
+bool update(GameCode* gc, void* state, float t, float dt)
 {
-    return gc->update(state, t, dt);
+    if (setjmp(jump_buf)) {
+        return true;
+    } else {
+        in_callback = true;
+        gc->update(state, t, dt);
+        in_callback = false;
+        return false;
+    }
 }
 
-void render(GameCode* gc, const void* state)
+bool render(GameCode* gc, const void* state)
 {
-    return gc->render(state);
+    if (setjmp(jump_buf)) {
+        return true;
+    } else {
+        in_callback = true;
+        gc->render(state);
+        in_callback = false;
+        return false;
+    }
+}
+
+void ng_break()
+{
+    assert(in_callback);
+    std::longjmp(jump_buf, 1);
 }
 }

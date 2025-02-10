@@ -58,32 +58,37 @@ int main(int, char**)
             // regular advance
             fsw::update();
 
-            gamecode::update(engine_state.game_code, state, time, dt);
+            const auto update_broken = gamecode::update(engine_state.game_code, state, time, dt);
 
             gfx::render_begin();
-            gamecode::render(engine_state.game_code, state);
+            const auto render_broken = gamecode::render(engine_state.game_code, state);
             gfx::render_end();
 
             last_frame_id = memtrack::save();
 
-            if (key_pressed(pressed, "space")) {
-                replay_frame = 20;
+            const auto broken = update_broken || render_broken;
+            if (broken || key_pressed(pressed, "f10")) {
+                replay_frame = last_frame_id;
                 fmt::println("replay {}", *replay_frame);
             }
         } else {
             memtrack::restore(*replay_frame);
 
+            fsw::update();
+
             gamecode::update(engine_state.game_code, state, time, dt);
 
             gfx::render_begin();
             gamecode::render(engine_state.game_code, state);
             gfx::render_end();
 
+            static constexpr uint32_t step = 1;
             if (key_pressed(pressed, "n")) {
-                *replay_frame = std::min(*replay_frame + 20, last_frame_id);
+                *replay_frame = std::min(*replay_frame + step, last_frame_id);
                 fmt::println("replay {}", *replay_frame);
             } else if (key_pressed(pressed, "p")) {
-                *replay_frame = std::max(*replay_frame, 20u) - 20;
+                *replay_frame = std::max(*replay_frame, step) - step;
+                fmt::println("replay {}", *replay_frame);
             } else if (key_pressed(pressed, "c")) {
                 fmt::println("replay {}", *replay_frame);
                 replay_frame.reset();

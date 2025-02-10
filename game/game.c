@@ -60,6 +60,7 @@ void update(State* state, float t, float dt)
         const float dx = state->player.pos.x - e->pos.x;
         const float dy = state->player.pos.y - e->pos.y;
         const float len = sqrt(dx * dx + dy * dy);
+        ng_break_if(len < 10.0f);
         e->pos.x += dx / len * e->speed * dt;
         e->pos.y += dy / len * e->speed * dt;
     }
@@ -67,10 +68,10 @@ void update(State* state, float t, float dt)
 
 void render(const State* state)
 {
-    ng_draw_sprite(state->player.sprite, state->player.pos.x, state->player.pos.y);
-
     for (int i = 0; i < state->enemy_count; i++) {
-        Enemy* e = &state->enemies[i];
+        const Enemy* e = &state->enemies[i];
         ng_draw_sprite(e->sprite, e->pos.x, e->pos.y);
     }
+
+    ng_draw_sprite(state->player.sprite, state->player.pos.x, state->player.pos.y);
 }
