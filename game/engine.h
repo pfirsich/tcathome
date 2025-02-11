@@ -23,6 +23,10 @@ void ng_break_internal(const char* file, int line);
 
 #define ng_break ng_break_internal(__FILE__, __LINE__);
 #define ng_break_if(cond)                                                                          \
-    if (cond) {                                                                                    \
+    if ((cond)) {                                                                                  \
+        ng_break;                                                                                  \
+    }
+#define ng_assert(cond)                                                                            \
+    if (!(cond)) {                                                                                 \
         ng_break;                                                                                  \
     }
