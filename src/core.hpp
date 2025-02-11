@@ -34,6 +34,7 @@ void render_end();
 struct Texture;
 
 Texture* load_texture(std::string_view path);
-void draw(const Texture* texture, float x, float y);
+void draw(
+    const Texture* texture, float x, float y, float scale, float r, float g, float b, float a);
 
 }

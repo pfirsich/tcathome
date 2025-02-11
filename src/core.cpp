@@ -118,13 +118,14 @@ Texture* load_texture(std::string_view path)
     return (Texture*)&gfx.textures[tex_idx];
 }
 
-void draw(const Texture* texture, float x, float y)
+void draw(const Texture* texture, float x, float y, float scale, float r, float g, float b, float a)
 {
     auto tex = (const glw::Texture*)texture;
     assert(tex->getTarget() != glw::Texture::Target::Invalid);
     auto& renderer = Gfx::instance().renderer;
-    const auto trafo = glwx::Transform2D(glm::vec2(x, y), 0.0f, glm::vec2(1.0f),
+    const auto trafo = glwx::Transform2D(glm::vec2(x, y), 0.0f, glm::vec2(scale),
         glm::vec2(tex->getWidth(), tex->getHeight()) * -0.5f);
+    renderer->color = glm::vec4(r, g, b, a);
     renderer->draw(*tex, trafo);
 }
 }

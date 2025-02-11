@@ -43,11 +43,12 @@ extern "C" uint32_t ng_load_image(const char* path)
     return idx + 1; // 0 is invalid
 }
 
-extern "C" void ng_draw_sprite(uint32_t image_handle, float x, float y)
+extern "C" void ng_draw_sprite(
+    uint32_t image_handle, float x, float y, float scale, float r, float g, float b, float a)
 {
     assert(image_handle != 0 && image_handle <= engine_state->textures.size());
     const auto texture = engine_state->textures[image_handle - 1];
-    gfx::draw(texture, x, y);
+    gfx::draw(texture, x, y, scale, r, g, b, a);
 }
 
 extern "C" bool ng_is_key_down(const char* key)
