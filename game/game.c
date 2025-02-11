@@ -3,24 +3,28 @@
 #include "engine.h"
 
 typedef struct {
-    float x, y;
+    float x;
+    float y;
 } Vec2;
 
 typedef struct {
     Vec2 pos;
     u32 sprite;
+    u8 padding[8];
 } Player;
 
 typedef struct {
     Vec2 pos;
     float speed;
     u32 sprite;
+    u8 padding[8];
 } Enemy;
 
 typedef struct {
     Player player;
     Enemy enemies[32];
     u32 enemy_count;
+    u8 padding[16];
 } State;
 
 void* load()
@@ -32,7 +36,7 @@ void* load()
     state->player.sprite = ng_load_image("assets/croc.png");
     state->player.pos = (Vec2) { res_x / 2.0f, res_y / 2.0f };
 
-    u32 enemy_sprite = ng_load_image("assets/chiki.png");
+    const u32 enemy_sprite = ng_load_image("assets/chiki.png");
     state->enemy_count = 8;
     for (int i = 0; i < state->enemy_count; i++) {
         state->enemies[i].sprite = enemy_sprite;
