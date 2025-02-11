@@ -85,6 +85,8 @@ void init()
     gfx.projection = glm::ortho(0.0f, static_cast<float>(plat.window.getSize().x),
         static_cast<float>(plat.window.getSize().y), 0.0f);
     glDepthFunc(GL_ALWAYS);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void render_begin()
