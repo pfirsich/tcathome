@@ -28,7 +28,7 @@ bool key_pressed(std::array<uint8_t, MaxNumScancodes>& pressed, const char* key)
 
 int main(int, char**)
 {
-    platform::init("Game VM", 1600, 900);
+    platform::init("Game VM", 960, 1080);
     gfx::init();
 
     EngineState engine_state;
