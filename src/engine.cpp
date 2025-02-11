@@ -53,9 +53,16 @@ extern "C" void ng_draw_sprite(
 
 extern "C" bool ng_is_key_down(const char* key)
 {
-    const auto sc = platform::get_scancode(key);
-    assert(sc > 0 && static_cast<size_t>(sc) < MaxNumScancodes);
+    const auto sc = static_cast<size_t>(platform::get_scancode(key));
+    assert(sc < MaxNumScancodes);
     return engine_state->input_state.keyboard_state[sc] > 0;
+}
+
+extern "C" int ng_key_pressed(const char* key)
+{
+    const auto sc = static_cast<size_t>(platform::get_scancode(key));
+    assert(sc < MaxNumScancodes);
+    return engine_state->input_state.keyboard_pressed[sc];
 }
 
 extern "C" float ng_randomf()

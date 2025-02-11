@@ -27,5 +27,6 @@ extern "C" uint32_t ng_load_image(const char* path);
 extern "C" void ng_draw_sprite(
     uint32_t image_handle, float x, float y, float scale, float r, float g, float b, float a);
 extern "C" bool ng_is_key_down(const char* key);
+extern "C" int ng_key_pressed(const char* key);
 extern "C" float ng_randomf();
 extern "C" void ng_break_internal(const char* file, int line);
