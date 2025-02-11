@@ -62,14 +62,8 @@ extern "C" float ng_randomf()
     return rng::randomf(&engine_state->random_state);
 }
 
-extern "C" void ng_break()
+extern "C" void ng_break_internal(const char* file, int line)
 {
+    fmt::println("break from {}:{}", file, line);
     gamecode::ng_break();
-}
-
-extern "C" void ng_break_if(bool cond)
-{
-    if (cond) {
-        ng_break();
-    }
 }
