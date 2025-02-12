@@ -12,7 +12,7 @@ void set_engine_state(EngineState* state)
     engine_state = state;
 }
 
-void reload_image(void* ctx, std::string_view path)
+static void reload_image(void* ctx, std::string_view path)
 {
     const auto idx = (uintptr_t)ctx;
     const auto tex = gfx::load_texture(path);
