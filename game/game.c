@@ -31,6 +31,7 @@ typedef struct {
 const float SCREEN_W = 960;
 const float SCREEN_H = 1080;
 const float CHIK_AGGRO_RADIUS = 200.0f;
+const float CHIK_EAT_RADIUS = 50.f;
 
 void* load()
 {
@@ -83,12 +84,12 @@ void update(State* state, float t, float dt)
         float dy = state->player.pos.y - c->pos.y;
         float dist = sqrtf(dx * dx + dy * dy);
 
-        if (dist < CHIK_AGGRO_RADIUS) {
-            // Close enough to eat friendly chickens
-            if (c->is_friendly) {
-                c->alive = false;
-                continue;
-            }
+        if (c->is_friendly && dist < CHIK_EAT_RADIUS) {
+            c->alive = false;
+            continue;
+        }
+
+        if (!c->is_friendly && dist < CHIK_AGGRO_RADIUS) {
             // Make unfriendly chickens angry
             c->anger = fminf(c->anger + dt * 2.0f, 1.0f);
         } else {
@@ -117,10 +118,12 @@ void render(const State* state)
         if (!c->alive)
             continue;
 
-        if (true) {
-            const float scale = CHIK_AGGRO_RADIUS / 256.0f;
-            ng_draw_sprite(
-                state->debug_circle_sprite, c->pos.x, c->pos.y, scale, 1.0f, 0.0f, 0.0f, 0.25f);
+        if (!c->is_friendly) {
+            const float scale = CHIK_AGGRO_RADIUS / 128.0f;
+            ng_draw_sprite(state->debug_circle_sprite, c->pos.x, c->pos.y, scale, 1.0f, 0.0f, 0.0f, 0.25f);
+        } else {
+            const float scale = CHIK_EAT_RADIUS / 128.0f;
+            ng_draw_sprite(state->debug_circle_sprite, c->pos.x, c->pos.y, scale, 0.0f, 1.0f, 0.0f, 0.25f);
         }
 
         // Green for friendly, red for angry
