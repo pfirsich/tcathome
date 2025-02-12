@@ -39,6 +39,8 @@ bool process_events(InputState* state)
         case SDL_QUIT:
             return false;
         case SDL_KEYDOWN:
+            // fmt::println("down scan: {}, name: {}", (int)event.key.keysym.scancode,
+            //   SDL_GetScancodeName(event.key.keysym.scancode));
             assert(event.key.keysym.scancode < MaxNumScancodes);
             state->keyboard_state[event.key.keysym.scancode] = true;
             state->keyboard_pressed[event.key.keysym.scancode] += 1;
@@ -47,6 +49,8 @@ bool process_events(InputState* state)
             }
             break;
         case SDL_KEYUP:
+            // fmt::println("up scan: {}, name: {}", (int)event.key.keysym.scancode,
+            //   SDL_GetScancodeName(event.key.keysym.scancode));
             assert(event.key.keysym.scancode < MaxNumScancodes);
             state->keyboard_state[event.key.keysym.scancode] = false;
             state->keyboard_released[event.key.keysym.scancode] += 1;
