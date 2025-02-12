@@ -9,15 +9,20 @@
 
 struct Texture;
 
-struct EngineState {
-    platform::InputState input_state;
-    rng::RandomState random_state;
+struct HotReloadState {
     // This provides a mapping from image handle to texture
     std::array<gfx::Texture*, 16> textures = {};
     GameCode* game_code;
 };
+static_assert(std::is_trivially_copyable_v<HotReloadState>);
+
+struct EngineState : public HotReloadState {
+    platform::InputState input_state;
+    rng::RandomState random_state;
+};
 static_assert(std::is_trivially_copyable_v<EngineState>);
 
+// Set the engine state to be referenced by the ng functions
 void set_engine_state(EngineState* state);
 
 // These functions will be called by the game, the state they implicitly reference is encapsulated
