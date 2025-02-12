@@ -1,5 +1,6 @@
 #include "fswatcher.hpp"
 
+#include <array>
 #include <cassert>
 #include <filesystem>
 
