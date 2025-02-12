@@ -30,8 +30,9 @@ void add_watch(std::string_view path, ModifiedCallback* callback, void* ctx)
 
 // All this is very inefficient and dumb, but easy to do
 
-void update()
+bool update()
 {
+    bool reloaded = false;
     for (auto& watch : watches) {
         if (watch.path.empty()) {
             break;
@@ -43,7 +44,9 @@ void update()
             fmt::println("modified: {}", watch.path);
             watch.last_mod = mod;
             watch.callback(watch.ctx, watch.path);
+            reloaded = true;
         }
     }
+    return reloaded;
 }
 }
