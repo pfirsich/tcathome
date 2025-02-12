@@ -45,12 +45,13 @@ size_t num_tracked_regions()
 
 namespace memtrack {
 
-void track(void* ptr, size_t size)
+uint32_t track(void* ptr, size_t size)
 {
     const auto idx = num_tracked_regions();
     fmt::println("track {} bytes", size);
     assert(idx < tracked_regions.size());
     tracked_regions[idx] = TrackedRegion { ptr, size };
+    return static_cast<uint32_t>(idx);
 }
 
 uint32_t save()
@@ -68,11 +69,11 @@ uint32_t save()
     return id;
 }
 
-void restore(uint32_t id)
+void restore(uint32_t snapshot_id)
 {
-    assert(id < get_snapshots().size());
+    assert(snapshot_id < get_snapshots().size());
     auto snap = get_snapshots().begin();
-    std::advance(snap, id);
+    std::advance(snap, snapshot_id);
 
     const auto num_regions = num_tracked_regions();
     assert(snap->regions.size() <= num_regions);
@@ -80,6 +81,31 @@ void restore(uint32_t id)
         auto& region = tracked_regions[i];
         assert(region.size == snap->regions[i].size);
         std::memcpy(region.ptr, snap->regions[i].data.get(), region.size);
+    }
+}
+
+void restore_to(uint32_t track_id, uint32_t snapshot_id, size_t offset, size_t size, void* dest)
+{
+    assert(snapshot_id < get_snapshots().size());
+    auto snap = get_snapshots().begin();
+    std::advance(snap, snapshot_id);
+
+    assert(track_id < snap->regions.size());
+    std::memcpy(dest, snap->regions[track_id].data.get() + offset, size);
+}
+
+void overwrite(uint32_t id)
+{
+    assert(id < get_snapshots().size());
+    auto snap = get_snapshots().begin();
+    std::advance(snap, id);
+
+    const auto num_regions = num_tracked_regions();
+    assert(snap->regions.size() == num_regions);
+    for (size_t i = 0; i < num_regions; ++i) {
+        auto& region = tracked_regions[i];
+        assert(region.size == snap->regions[i].size);
+        std::memcpy(snap->regions[i].data.get(), region.ptr, region.size);
     }
 }
 
