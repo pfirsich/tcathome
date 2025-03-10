@@ -46,6 +46,68 @@ bool render(GameCode* game_code, void* state)
     return broken;
 }
 
+enum class Mode { Advance, Pause, Playback, Replay };
+
+std::string_view to_string(Mode mode)
+{
+    switch (mode) {
+    case Mode::Advance:
+        return "Advance";
+    case Mode::Pause:
+        return "Pause";
+    case Mode::Playback:
+        return "Playback";
+    case Mode::Replay:
+        return "Replay";
+    default:
+        return "UNKNOWN";
+    }
+}
+
+void show_overlay(
+    Mode mode, uint32_t current_frame, uint32_t last_frame, std::optional<uint32_t> replay_mark)
+{
+    static int location = 0;
+    const ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration
+        | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings
+        | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
+    assert(location >= 0 && location <= 4);
+    const float PAD = 10.0f;
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImVec2 work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
+    ImVec2 work_size = viewport->WorkSize;
+    ImVec2 window_pos, window_pos_pivot;
+    window_pos.x = (location & 1) ? (work_pos.x + work_size.x - PAD) : (work_pos.x + PAD);
+    window_pos.y = (location & 2) ? (work_pos.y + work_size.y - PAD) : (work_pos.y + PAD);
+    window_pos_pivot.x = (location & 1) ? 1.0f : 0.0f;
+    window_pos_pivot.y = (location & 2) ? 1.0f : 0.0f;
+    ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
+
+    ImGui::SetNextWindowBgAlpha(0.35f);
+    if (ImGui::Begin("overlay", nullptr, window_flags)) {
+        ImGui::Text(fmt::format("Mode: {}", to_string(mode)).c_str());
+        ImGui::Text(fmt::format("Current Frame: {}", current_frame).c_str());
+        ImGui::Text(fmt::format("Last Frame: {}", last_frame).c_str());
+        if (replay_mark) {
+            ImGui::Text(fmt::format("Replay Mark: {}", *replay_mark).c_str());
+        } else {
+            ImGui::Text("Replay Mark: none");
+        }
+        if (ImGui::BeginPopupContextWindow()) {
+            if (ImGui::MenuItem("Top-left", NULL, location == 0))
+                location = 0;
+            if (ImGui::MenuItem("Top-right", NULL, location == 1))
+                location = 1;
+            if (ImGui::MenuItem("Bottom-left", NULL, location == 2))
+                location = 2;
+            if (ImGui::MenuItem("Bottom-right", NULL, location == 3))
+                location = 3;
+            ImGui::EndPopup();
+        }
+    }
+    ImGui::End();
+}
+
 int main(int, char**)
 {
     platform::init("Game VM", 960, 1080);
@@ -66,7 +128,6 @@ int main(int, char**)
     auto current_frame = memtrack::save();
     auto last_frame = current_frame;
     std::optional<uint32_t> replay_mark;
-    enum class Mode { Advance, Pause, Playback, Replay };
     Mode mode = Mode::Advance;
 
     auto seek = [&](uint32_t frame_id) {
@@ -126,6 +187,7 @@ int main(int, char**)
             // Just render and handle input (later)
             gfx::render_begin();
             gamecode::render(engine_state.game_code, state);
+            show_overlay(mode, current_frame, last_frame, replay_mark);
             ImGui::ShowDemoWindow();
             gfx::render_end();
         } else if (mode == Mode::Playback) {
