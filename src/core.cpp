@@ -64,6 +64,22 @@ float get_time()
 {
     return glwx::getTime();
 }
+
+uint64_t get_perf_counter()
+{
+    return SDL_GetPerformanceCounter();
+}
+
+uint64_t get_perf_counter_freq()
+{
+    return SDL_GetPerformanceFrequency();
+}
+
+float get_perf_counter_elapsed(uint64_t start, uint64_t factor)
+{
+    const auto delta = get_perf_counter() - start;
+    return static_cast<float>(delta * factor) / static_cast<float>(get_perf_counter_freq());
+}
 }
 
 struct Gfx {

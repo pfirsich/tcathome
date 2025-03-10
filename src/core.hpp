@@ -24,6 +24,10 @@ int get_scancode(const char* name);
 bool process_events(InputState* state);
 
 float get_time();
+
+uint64_t get_perf_counter();
+uint64_t get_perf_counter_freq();
+float get_perf_counter_elapsed(uint64_t start, uint64_t factor);
 }
 
 namespace gfx {
