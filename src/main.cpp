@@ -38,14 +38,6 @@ bool key_pressed(platform::InputState& state, const char* key)
     return get_key(state.keyboard_pressed, key);
 }
 
-bool render(GameCode* game_code, void* state)
-{
-    gfx::render_begin();
-    const auto broken = gamecode::render(game_code, state);
-    gfx::render_end();
-    return broken;
-}
-
 enum class Mode { Advance, Pause, Playback, Replay };
 
 std::string_view to_string(Mode mode)
@@ -67,6 +59,10 @@ std::string_view to_string(Mode mode)
 void show_overlay(
     Mode mode, uint32_t current_frame, uint32_t last_frame, std::optional<uint32_t> replay_mark)
 {
+    if (mode == Mode::Advance) {
+        return;
+    }
+
     static int location = 0;
     const ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration
         | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings
@@ -93,6 +89,42 @@ void show_overlay(
         } else {
             ImGui::Text("Replay Mark: none");
         }
+
+        ImGui::Separator();
+        if (mode == Mode::Pause) {
+            if (current_frame == last_frame) {
+                ImGui::Text("n: advance one frame");
+            } else {
+                ImGui::Text("n: skip 1 frame forwards");
+            }
+            ImGui::Text("shift+n: skip 20 frames forwards");
+            ImGui::Text("p: skip 1 frame backwards");
+            ImGui::Text("shift+p: skip 20 frames backwards");
+            ImGui::Text("e: skip to last frame");
+            ImGui::Text("c: continue from current frame");
+            ImGui::Text("r: replay from mark");
+            ImGui::Text("ctrl+r: replay from current frame");
+            if (replay_mark) {
+                ImGui::Text("ctrl+m: jump to replay mark");
+            }
+            if (replay_mark == current_frame) {
+                ImGui::Text("m: unset replay mark");
+            } else {
+                ImGui::Text("m: set replay mark");
+            }
+            ImGui::Text("return: playback from here");
+        } else if (mode == Mode::Playback) {
+            ImGui::Text("space: pause");
+        } else if (mode == Mode::Replay) {
+            ImGui::Text("space: pause");
+            if (replay_mark) {
+                ImGui::Text("r: replay from mark");
+            }
+        }
+        if (replay_mark) {
+            ImGui::Text("reload file: replay from mark");
+        }
+
         if (ImGui::BeginPopupContextWindow()) {
             if (ImGui::MenuItem("Top-left", NULL, location == 0))
                 location = 0;
@@ -170,7 +202,9 @@ int main(int, char**)
             std::memcpy(&engine_state.input_state, &input_state, sizeof(platform::InputState));
 
             const auto update_broken = gamecode::update(engine_state.game_code, state, time, dt);
-            const auto render_broken = render(engine_state.game_code, state);
+            gfx::render_begin();
+            const auto render_broken = gamecode::render(engine_state.game_code, state);
+            gfx::render_end();
 
             current_frame = memtrack::save();
             last_frame = current_frame;
@@ -196,7 +230,10 @@ int main(int, char**)
             // Do update so we play sound and stuff
             gamecode::update(engine_state.game_code, state, time, dt);
 
-            render(engine_state.game_code, state);
+            gfx::render_begin();
+            gamecode::render(engine_state.game_code, state);
+            show_overlay(mode, current_frame, last_frame, replay_mark);
+            gfx::render_end();
 
             if (current_frame == last_frame) {
                 mode = Mode::Pause;
@@ -212,7 +249,10 @@ int main(int, char**)
 
             gamecode::update(engine_state.game_code, state, time, dt);
 
-            render(engine_state.game_code, state);
+            gfx::render_begin();
+            gamecode::render(engine_state.game_code, state);
+            show_overlay(mode, current_frame, last_frame, replay_mark);
+            gfx::render_end();
 
             memtrack::overwrite(current_frame);
 
@@ -268,11 +308,12 @@ int main(int, char**)
                 if (ctrl) {
                     // replay from here
                     replay(current_frame);
-                } else {
+                    fmt::println("replay from {}", current_frame);
+                } else if (replay_mark) {
                     // replay from mark or current frame if none is set
-                    replay(replay_mark.value_or(current_frame));
+                    replay(*replay_mark);
+                    fmt::println("replay from {}", *replay_mark);
                 }
-                fmt::println("replay from {}", current_frame);
             } else if (ctrl && key_pressed(input_state, "m") && replay_mark) {
                 // jump to mark
                 current_frame = *replay_mark;
