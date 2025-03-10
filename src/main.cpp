@@ -85,11 +85,11 @@ void show_overlay(
 
     ImGui::SetNextWindowBgAlpha(0.35f);
     if (ImGui::Begin("overlay", nullptr, window_flags)) {
-        ImGui::Text(fmt::format("Mode: {}", to_string(mode)).c_str());
-        ImGui::Text(fmt::format("Current Frame: {}", current_frame).c_str());
-        ImGui::Text(fmt::format("Last Frame: {}", last_frame).c_str());
+        ImGui::Text("Mode: %s", to_string(mode).data());
+        ImGui::Text("Current Frame: %u", current_frame);
+        ImGui::Text("Last Frame: %u", last_frame);
         if (replay_mark) {
-            ImGui::Text(fmt::format("Replay Mark: {}", *replay_mark).c_str());
+            ImGui::Text("Replay Mark: %u", *replay_mark);
         } else {
             ImGui::Text("Replay Mark: none");
         }
