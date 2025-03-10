@@ -32,6 +32,7 @@ GameCode* load(const char* path)
     assert(i < game_codes.size());
     auto& gc = game_codes[i];
 
+    const auto start = platform::get_perf_counter();
     gc.tcc = tcc_new();
     assert(gc.tcc);
 
@@ -61,6 +62,9 @@ GameCode* load(const char* path)
     gc.load = (LoadFunc*)tcc_get_symbol(gc.tcc, "load");
     gc.update = (UpdateFunc*)tcc_get_symbol(gc.tcc, "update");
     gc.render = (RenderFunc*)tcc_get_symbol(gc.tcc, "render");
+
+    fmt::println(
+        "compiled new code in {}us", platform::get_perf_counter_elapsed(start, 1000 * 1000));
 
     return &gc;
 }
