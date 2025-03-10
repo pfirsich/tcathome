@@ -43,6 +43,16 @@ void shutdown()
     ImGui::DestroyContext();
 }
 
+bool InputState::is_down(const char* key)
+{
+    return keyboard_state[static_cast<size_t>(get_scancode(key))];
+}
+
+bool InputState::is_pressed(const char* key)
+{
+    return keyboard_pressed[static_cast<size_t>(get_scancode(key))];
+}
+
 int get_scancode(const char* name)
 {
     return SDL_GetScancodeFromName(name);

@@ -1,29 +1,9 @@
 #pragma once
 
-#include <array>
-#include <type_traits>
+#include "vm.hpp"
 
-#include "core.hpp"
-#include "gamecode.hpp"
-#include "random.hpp"
-
-struct Texture;
-
-struct HotReloadState {
-    // This provides a mapping from image handle to texture
-    std::array<gfx::Texture*, 16> textures = {};
-    GameCode* game_code;
-};
-static_assert(std::is_trivially_copyable_v<HotReloadState>);
-
-struct EngineState : public HotReloadState {
-    platform::InputState input_state;
-    rng::RandomState random_state;
-};
-static_assert(std::is_trivially_copyable_v<EngineState>);
-
-// Set the engine state to be referenced by the ng functions
-void set_engine_state(EngineState* state);
+// Store a pointer to the VM instance to be referenced by the ng functions below
+void set_ng_vm(Vm* vm);
 
 // These functions will be called by the game, the state they implicitly reference is encapsulated
 // by EngineState above and can be pointed to by set_engine_state;

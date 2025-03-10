@@ -3,6 +3,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <string_view>
 
 // This should be SDL_NUM_SCANCODES, but I don't want to include SDL just for this
@@ -17,6 +18,9 @@ struct InputState {
     std::array<uint8_t, MaxNumScancodes> keyboard_state = {};
     std::array<uint8_t, MaxNumScancodes> keyboard_pressed = {};
     std::array<uint8_t, MaxNumScancodes> keyboard_released = {};
+
+    bool is_down(const char* key);
+    bool is_pressed(const char* key);
 };
 
 int get_scancode(const char* name);
@@ -42,4 +46,10 @@ Texture* load_texture(std::string_view path);
 void draw(
     const Texture* texture, float x, float y, float scale, float r, float g, float b, float a);
 
+}
+
+template <typename T>
+void copy_obj(T* dst, const T* src)
+{
+    std::memcpy(dst, src, sizeof(T));
 }

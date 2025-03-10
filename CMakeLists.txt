@@ -25,10 +25,11 @@ set(GVM_SOURCES
   src/engine.cpp
   src/fswatcher.cpp
   src/gamecode.cpp
+  src/gui.cpp
   src/main.cpp
   src/memtrack.cpp
   src/random.cpp
-  src/state_inspector.cpp
+  src/vm.cpp
 )
 
 set(IMGUI_SOURCES
