@@ -10,6 +10,7 @@ constexpr size_t MaxNumScancodes = 512;
 
 namespace platform {
 void init(const char* title, uint32_t xres, uint32_t yres);
+void shutdown();
 
 struct InputState {
     // Index is Scancode

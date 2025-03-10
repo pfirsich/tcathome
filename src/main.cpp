@@ -1,14 +1,15 @@
 #include <optional>
 #include <string>
 
+#include "imgui.h"
+#include <fmt/core.h>
+
 #include "core.hpp"
 #include "engine.hpp"
 #include "fswatcher.hpp"
 #include "gamecode.hpp"
 #include "memtrack.hpp"
 #include "random.hpp"
-
-#include <fmt/core.h>
 
 void reload_game_code(void* ctx, std::string_view path)
 {
@@ -123,7 +124,10 @@ int main(int, char**)
             // Do NOT update, so we don't play sounds or something while seeking
 
             // Just render and handle input (later)
-            render(engine_state.game_code, state);
+            gfx::render_begin();
+            gamecode::render(engine_state.game_code, state);
+            ImGui::ShowDemoWindow();
+            gfx::render_end();
         } else if (mode == Mode::Playback) {
             memtrack::restore(current_frame);
 
@@ -239,4 +243,6 @@ int main(int, char**)
             }
         }
     }
+
+    platform::shutdown();
 }

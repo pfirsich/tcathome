@@ -6,6 +6,10 @@
 #include <glwx/spriterenderer.hpp>
 #include <glwx/window.hpp>
 
+#include "imgui.h"
+#include "imgui_impl_opengl3.h"
+#include "imgui_impl_sdl2.h"
+
 struct Platform {
     glwx::Window window;
 
@@ -21,6 +25,22 @@ void init(const char* title, uint32_t xres, uint32_t yres)
 {
     auto& plat = Platform::instance();
     plat.window = glwx::makeWindow(title, xres, yres).value();
+
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplSDL2_InitForOpenGL(plat.window.getSdlWindow(), plat.window.getSdlGlContext());
+    ImGui_ImplOpenGL3_Init();
+}
+
+void shutdown()
+{
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    ImGui::DestroyContext();
 }
 
 int get_scancode(const char* name)
@@ -35,6 +55,7 @@ bool process_events(InputState* state)
 
     SDL_Event event;
     while (SDL_PollEvent(&event) != 0) {
+        ImGui_ImplSDL2_ProcessEvent(&event);
         switch (event.type) {
         case SDL_QUIT:
             return false;
@@ -115,11 +136,17 @@ void render_begin()
     glClear(GL_COLOR_BUFFER_BIT);
     gfx.renderer->getDefaultShaderProgram().bind();
     gfx.renderer->getDefaultShaderProgram().setUniform("projectionMatrix", gfx.projection);
+
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplSDL2_NewFrame();
+    ImGui::NewFrame();
 }
 
 void render_end()
 {
     Gfx::instance().renderer->flush();
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     Platform::instance().window.swap();
 }
 
