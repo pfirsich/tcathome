@@ -11,6 +11,8 @@
 #include "memtrack.hpp"
 #include "random.hpp"
 
+void show_state_inspector(const void* state);
+
 void reload_game_code(void* ctx, std::string_view path)
 {
     auto engine_state = (EngineState*)ctx;
@@ -222,7 +224,8 @@ int main(int, char**)
             gfx::render_begin();
             gamecode::render(engine_state.game_code, state);
             show_overlay(mode, current_frame, last_frame, replay_mark);
-            ImGui::ShowDemoWindow();
+            show_state_inspector(state);
+            // ImGui::ShowDemoWindow();
             gfx::render_end();
         } else if (mode == Mode::Playback) {
             memtrack::restore(current_frame);

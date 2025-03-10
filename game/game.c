@@ -23,8 +23,8 @@ typedef struct {
 
 typedef struct {
     Player player;
-    Chicken chickens[32];
-    u32 chicken_count;
+    Chicken chickens[16];
+    u32 num_chickens;
     u32 debug_circle_sprite;
 } State;
 
@@ -45,9 +45,9 @@ void* load()
     state->player.pos = (Vec2) { SCREEN_W / 2, SCREEN_H / 2 };
 
     // Init chickens
-    state->chicken_count = 12;
+    state->num_chickens = 12;
     const u32 chicken_sprite = ng_load_image("assets/chik.png");
-    for (int i = 0; i < state->chicken_count; i++) {
+    for (int i = 0; i < state->num_chickens; i++) {
         const float spawn_margin = 100.0f;
         state->chickens[i].sprite = chicken_sprite;
         state->chickens[i].pos = (Vec2) {
@@ -74,7 +74,7 @@ void update(State* state, float t, float dt)
     state->player.pos.y += move_y * player_speed * dt;
 
     // Update chickens
-    for (int i = 0; i < state->chicken_count; i++) {
+    for (int i = 0; i < state->num_chickens; i++) {
         Chicken* c = &state->chickens[i];
         if (!c->alive)
             continue;
@@ -113,17 +113,19 @@ void render(const State* state)
         1.0f, 1.0f);
 
     // Draw chickens
-    for (int i = 0; i < state->chicken_count; i++) {
+    for (int i = 0; i < state->num_chickens; i++) {
         const Chicken* c = &state->chickens[i];
         if (!c->alive)
             continue;
 
         if (!c->is_friendly) {
             const float scale = CHIK_AGGRO_RADIUS / 128.0f;
-            ng_draw_sprite(state->debug_circle_sprite, c->pos.x, c->pos.y, scale, 1.0f, 0.0f, 0.0f, 0.25f);
+            ng_draw_sprite(
+                state->debug_circle_sprite, c->pos.x, c->pos.y, scale, 1.0f, 0.0f, 0.0f, 0.25f);
         } else {
             const float scale = CHIK_EAT_RADIUS / 128.0f;
-            ng_draw_sprite(state->debug_circle_sprite, c->pos.x, c->pos.y, scale, 0.0f, 1.0f, 0.0f, 0.25f);
+            ng_draw_sprite(
+                state->debug_circle_sprite, c->pos.x, c->pos.y, scale, 0.0f, 1.0f, 0.0f, 0.25f);
         }
 
         // Green for friendly, red for angry

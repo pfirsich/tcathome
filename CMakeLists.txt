@@ -28,6 +28,7 @@ set(GVM_SOURCES
   src/main.cpp
   src/memtrack.cpp
   src/random.cpp
+  src/state_inspector.cpp
 )
 
 set(IMGUI_SOURCES
