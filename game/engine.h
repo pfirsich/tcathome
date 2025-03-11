@@ -22,8 +22,10 @@ bool ng_is_key_down(const char* key);
 float ng_randomf();
 void ng_break_internal(const char* file, int line);
 timestamp_t ng_timestamp_internal(const char* file, int line);
+void ng_error_internal(const char* file, int line, const char* msg);
 
-#define ng_break ng_break_internal(__FILE__, __LINE__);
+#define ng_break ng_break_internal(__FILE__, __LINE__)
+#define ng_error(msg) ng_error_internal(__FILE__, __LINE__, msg)
 #define ng_timestamp ng_timestamp_internal(__FILE__, __LINE__)
 #define ng_break_if(cond)                                                                          \
     if ((cond)) {                                                                                  \

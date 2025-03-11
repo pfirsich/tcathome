@@ -81,3 +81,9 @@ extern "C" uint64_t ng_timestamp_internal(const char* file, int line)
     }
     return ts;
 }
+
+extern "C" void ng_error_internal(const char* file, int line, const char* message)
+{
+    vm->error = Vm::Error { file, line, message };
+    ng_break_internal(file, line);
+}

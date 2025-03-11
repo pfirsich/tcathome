@@ -55,6 +55,7 @@ GameCode* load(const char* path)
     tcc_add_symbol(gc.tcc, "ng_random_float", (const void*)ng_randomf);
     tcc_add_symbol(gc.tcc, "ng_break_internal", (const void*)ng_break_internal);
     tcc_add_symbol(gc.tcc, "ng_timestamp_internal", (const void*)ng_timestamp_internal);
+    tcc_add_symbol(gc.tcc, "ng_error_internal", (const void*)ng_error_internal);
 
     if (tcc_relocate(gc.tcc) < 0) {
         fmt::println("relocate failed");

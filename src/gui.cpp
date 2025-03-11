@@ -253,3 +253,19 @@ void show_overlay(const Vm* vm)
     }
     ImGui::End();
 }
+
+void show_error(const Vm::Error& error)
+{
+    const ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration
+        | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings
+        | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
+    const float PAD = 10.0f;
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImVec2 work_size = viewport->WorkSize;
+    ImGui::SetNextWindowPos(
+        { work_size.x / 2.0f + PAD, PAD }, ImGuiCond_Always, ImVec2 { 0.5f, 0.0f });
+    ImGui::Begin("error", nullptr, window_flags);
+    ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Error at %s:%d", error.file, error.line);
+    ImGui::Text("%s", error.message.c_str());
+    ImGui::End();
+}

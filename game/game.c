@@ -75,8 +75,10 @@ void update(State* state, float t, float dt)
     state->player.pos.y += move_y * player_speed * dt;
 
     // Update chickens
+    usize friendly_alive = 0;
     for (int i = 0; i < state->num_chickens; i++) {
         Chicken* c = &state->chickens[i];
+        friendly_alive += c->is_friendly && c->alive;
         if (!c->alive)
             continue;
 
@@ -105,6 +107,10 @@ void update(State* state, float t, float dt)
             c->pos.x += (dx / dist) * speed * dt;
             c->pos.y += (dy / dist) * speed * dt;
         }
+    }
+
+    if (friendly_alive == 0) {
+        ng_error("You ate all the chickens!");
     }
 }
 

@@ -11,6 +11,7 @@
 
 void show_state_inspector(Vm* vm);
 void show_overlay(const Vm* vm);
+void show_error(const Vm::Error& error);
 
 void render_debug(Vm* vm)
 {
@@ -19,6 +20,9 @@ void render_debug(Vm* vm)
     show_overlay(vm);
     show_state_inspector(vm);
     // ImGui::ShowDemoWindow();
+    if (vm->error) {
+        show_error(*vm->error);
+    }
     gfx::render_end();
 }
 
