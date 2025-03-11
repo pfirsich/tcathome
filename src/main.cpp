@@ -12,6 +12,16 @@
 void show_state_inspector(Vm* vm);
 void show_overlay(const Vm* vm);
 
+void render_debug(Vm* vm)
+{
+    gfx::render_begin();
+    vm->render();
+    show_overlay(vm);
+    show_state_inspector(vm);
+    // ImGui::ShowDemoWindow();
+    gfx::render_end();
+}
+
 int main(int, char**)
 {
     platform::init("Game VM", 960, 1080);
@@ -22,13 +32,6 @@ int main(int, char**)
     vm.init("game/game.c");
 
     platform::InputState input_state;
-
-    auto replay = [&](uint32_t start_frame) {
-        vm.mode = Vm::Mode::Replay;
-        vm.seek(start_frame);
-        // Overwrite the just restored state with the most recent code
-        vm.copy_most_recent_hot_to_current();
-    };
 
     float time = platform::get_time();
     while (platform::process_events(&input_state)) {
@@ -42,26 +45,22 @@ int main(int, char**)
         const auto reloaded = fsw::update();
 
         if (vm.replay_mark && reloaded) {
-            replay(*vm.replay_mark);
+            vm.start_replay(*vm.replay_mark);
             fmt::println("replay on reload");
         }
 
         if (vm.mode == Vm::Mode::Advance) {
-            vm.set_input_state(input_state);
-            vm.copy_most_recent_hot_to_current();
-            vm.update_time(dt);
-
-            const auto update_broken = vm.update();
+            const auto update_broken = vm.update_advance(input_state, dt);
 
             gfx::render_begin();
             const auto render_broken = vm.render();
             gfx::render_end();
 
-            vm.save_next_frame();
+            vm.finish_frame_advance();
 
             const auto broken = update_broken || render_broken;
             if (broken) {
-                vm.mode = Vm::Mode::Pause;
+                vm.start_pause();
                 vm.replay_mark = vm.current_frame;
                 fmt::println("break");
             }
@@ -69,50 +68,19 @@ int main(int, char**)
             // Do NOT update, so we don't play sounds or something while seeking
 
             // Just render and handle input (later)
-            gfx::render_begin();
-            vm.render();
-            show_overlay(&vm);
-            show_state_inspector(&vm);
-            // ImGui::ShowDemoWindow();
-            gfx::render_end();
+            render_debug(&vm);
         } else if (vm.mode == Vm::Mode::Playback) {
-            memtrack::restore(vm.current_frame);
+            vm.update_playback();
 
-            // Do update so we play sound and stuff
-            vm.update();
+            render_debug(&vm);
 
-            gfx::render_begin();
-            vm.render();
-            show_overlay(&vm);
-            show_state_inspector(&vm);
-            gfx::render_end();
-
-            if (vm.current_frame == vm.last_frame) {
-                vm.mode = Vm::Mode::Pause;
-            } else {
-                vm.current_frame += 1;
-            }
+            vm.finish_frame_playback();
         } else if (vm.mode == Vm::Mode::Replay) {
-            // Just restore input state. We restored everything else when we started the replay and
-            // everything else depends on the new update code.
-            vm.copy_input_state(vm.current_frame);
-            vm.update_time(dt);
+            vm.update_replay(dt);
 
-            vm.update();
+            render_debug(&vm);
 
-            gfx::render_begin();
-            vm.render();
-            show_overlay(&vm);
-            show_state_inspector(&vm);
-            gfx::render_end();
-
-            memtrack::overwrite(vm.current_frame);
-
-            if (vm.current_frame == vm.last_frame) {
-                vm.mode = Vm::Mode::Pause;
-            } else {
-                vm.current_frame += 1;
-            }
+            vm.finish_frame_replay();
         }
 
         // Handle input
@@ -120,8 +88,7 @@ int main(int, char**)
         const auto shift = input_state.is_down("left shift") || input_state.is_down("right shift");
         if (vm.mode == Vm::Mode::Advance) {
             if (input_state.is_pressed("return")) {
-                vm.mode = Vm::Mode::Pause;
-                fmt::println("pause");
+                vm.start_pause();
             }
         } else if (vm.mode == Vm::Mode::Pause) {
             const uint32_t step = shift ? 20 : 1;
@@ -150,18 +117,17 @@ int main(int, char**)
                 fmt::println("current frame: {}", vm.current_frame);
             } else if (input_state.is_pressed("c")) {
                 // continue from here
-                vm.mode = Vm::Mode::Advance;
-                vm.replay_mark.reset();
+                vm.start_advance();
                 fmt::println("continue from frame {}", vm.current_frame);
             } else if (input_state.is_pressed("r")) {
                 // replay
                 if (ctrl) {
                     // replay from here
-                    replay(vm.current_frame);
+                    vm.start_replay(vm.current_frame);
                     fmt::println("replay from {}", vm.current_frame);
                 } else if (vm.replay_mark) {
                     // replay from mark or current frame if none is set
-                    replay(*vm.replay_mark);
+                    vm.start_replay(*vm.replay_mark);
                     fmt::println("replay from {}", *vm.replay_mark);
                 }
             } else if (ctrl && input_state.is_pressed("m") && vm.replay_mark) {
@@ -179,20 +145,17 @@ int main(int, char**)
                 }
             } else if (input_state.is_pressed("return")) {
                 // playback from here
-                vm.mode = Vm::Mode::Playback;
-                vm.replay_mark.reset();
+                vm.start_playback();
             }
         } else if (vm.mode == Vm::Mode::Playback) {
             if (input_state.is_pressed("space")) {
-                vm.mode = Vm::Mode::Pause;
-                fmt::println("pause");
+                vm.start_pause();
             }
         } else if (vm.mode == Vm::Mode::Replay) {
             if (input_state.is_pressed("r") && vm.replay_mark) {
-                replay(*vm.replay_mark);
+                vm.start_replay(*vm.replay_mark);
             } else if (input_state.is_pressed("space")) {
-                vm.mode = Vm::Mode::Pause;
-                fmt::println("pause");
+                vm.start_pause();
             }
         }
     }

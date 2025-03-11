@@ -92,3 +92,85 @@ void Vm::copy_input_state(uint32_t source_frame_id)
         (uintptr_t)&engine_state.input_state - (uintptr_t)&engine_state,
         sizeof(platform::InputState), &engine_state.input_state);
 }
+
+bool Vm::update_advance(const platform::InputState& input_state, float dt)
+{
+    assert(mode == Mode::Advance);
+    set_input_state(input_state);
+    copy_most_recent_hot_to_current();
+    update_time(dt);
+    return update();
+}
+
+void Vm::finish_frame_advance()
+{
+    save_next_frame();
+}
+
+bool Vm::update_replay(float dt)
+{
+    assert(mode == Mode::Replay);
+    // Just restore input state. We restored everything else when we started the replay and
+    // everything else depends on the new update code.
+    copy_input_state(current_frame);
+    update_time(dt);
+    return update();
+}
+
+void Vm::finish_frame_replay()
+{
+    assert(mode == Mode::Replay);
+
+    memtrack::overwrite(current_frame);
+
+    if (current_frame == last_frame) {
+        mode = Vm::Mode::Pause;
+    } else {
+        current_frame += 1;
+    }
+}
+
+bool Vm::update_playback()
+{
+    assert(mode == Mode::Playback);
+    memtrack::restore(current_frame);
+    // Update so we lay sounds and stuff
+    return update();
+}
+
+void Vm::finish_frame_playback()
+{
+    assert(mode == Mode::Playback);
+
+    if (current_frame == last_frame) {
+        mode = Vm::Mode::Pause;
+    } else {
+        current_frame += 1;
+    }
+}
+
+void Vm::start_advance()
+{
+    mode = Vm::Mode::Advance;
+    replay_mark.reset();
+}
+
+void Vm::start_pause()
+{
+    mode = Vm::Mode::Pause;
+    fmt::println("pause");
+}
+
+void Vm::start_replay(uint32_t start_frame_id)
+{
+    mode = Vm::Mode::Replay;
+    seek(start_frame_id);
+    // Overwrite the just restored state with the most recent code
+    copy_most_recent_hot_to_current();
+}
+
+void Vm::start_playback()
+{
+    mode = Vm::Mode::Playback;
+    replay_mark.reset();
+}
