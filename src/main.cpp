@@ -9,72 +9,8 @@
 #include "memtrack.hpp"
 #include "vm.hpp"
 
-void show_state_inspector(const void* state);
-
-void show_overlay(
-    Vm::Mode mode, uint32_t current_frame, uint32_t last_frame, std::optional<uint32_t> replay_mark)
-{
-    if (mode == Vm::Mode::Advance) {
-        return;
-    }
-
-    const ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration
-        | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings
-        | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
-    const float PAD = 10.0f;
-    const ImGuiViewport* viewport = ImGui::GetMainViewport();
-    ImVec2 work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
-    ImVec2 window_pos = { work_pos.x + PAD, work_pos.y + PAD };
-    ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, ImVec2 { 0.0f, 0.0f });
-
-    ImGui::SetNextWindowBgAlpha(0.35f);
-    if (ImGui::Begin("overlay", nullptr, window_flags)) {
-        ImGui::Text("Mode: %s", Vm::to_string(mode).data());
-        ImGui::Text("Current Frame: %u", current_frame);
-        ImGui::Text("Last Frame: %u", last_frame);
-        if (replay_mark) {
-            ImGui::Text("Replay Mark: %u", *replay_mark);
-        } else {
-            ImGui::Text("Replay Mark: none");
-        }
-
-        ImGui::Separator();
-        if (mode == Vm::Mode::Pause) {
-            if (current_frame == last_frame) {
-                ImGui::Text("n: advance one frame");
-            } else {
-                ImGui::Text("n: skip 1 frame forwards");
-            }
-            ImGui::Text("shift+n: skip 20 frames forwards");
-            ImGui::Text("p: skip 1 frame backwards");
-            ImGui::Text("shift+p: skip 20 frames backwards");
-            ImGui::Text("e: skip to last frame");
-            ImGui::Text("c: continue from current frame");
-            ImGui::Text("r: replay from mark");
-            ImGui::Text("ctrl+r: replay from current frame");
-            if (replay_mark) {
-                ImGui::Text("ctrl+m: jump to replay mark");
-            }
-            if (replay_mark == current_frame) {
-                ImGui::Text("m: unset replay mark");
-            } else {
-                ImGui::Text("m: set replay mark");
-            }
-            ImGui::Text("return: playback from here");
-        } else if (mode == Vm::Mode::Playback) {
-            ImGui::Text("space: pause");
-        } else if (mode == Vm::Mode::Replay) {
-            ImGui::Text("space: pause");
-            if (replay_mark) {
-                ImGui::Text("r: replay from mark");
-            }
-        }
-        if (replay_mark) {
-            ImGui::Text("reload file: replay from mark");
-        }
-    }
-    ImGui::End();
-}
+void show_state_inspector(Vm* vm);
+void show_overlay(const Vm* vm);
 
 int main(int, char**)
 {
@@ -135,8 +71,8 @@ int main(int, char**)
             // Just render and handle input (later)
             gfx::render_begin();
             vm.render();
-            show_overlay(vm.mode, vm.current_frame, vm.last_frame, vm.replay_mark);
-            show_state_inspector(vm.state);
+            show_overlay(&vm);
+            show_state_inspector(&vm);
             // ImGui::ShowDemoWindow();
             gfx::render_end();
         } else if (vm.mode == Vm::Mode::Playback) {
@@ -147,8 +83,8 @@ int main(int, char**)
 
             gfx::render_begin();
             vm.render();
-            show_overlay(vm.mode, vm.current_frame, vm.last_frame, vm.replay_mark);
-            show_state_inspector(vm.state);
+            show_overlay(&vm);
+            show_state_inspector(&vm);
             gfx::render_end();
 
             if (vm.current_frame == vm.last_frame) {
@@ -166,8 +102,8 @@ int main(int, char**)
 
             gfx::render_begin();
             vm.render();
-            show_overlay(vm.mode, vm.current_frame, vm.last_frame, vm.replay_mark);
-            show_state_inspector(vm.state);
+            show_overlay(&vm);
+            show_state_inspector(&vm);
             gfx::render_end();
 
             memtrack::overwrite(vm.current_frame);

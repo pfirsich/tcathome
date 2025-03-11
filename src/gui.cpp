@@ -6,6 +6,8 @@
 #include "imgui.h"
 #include <fmt/core.h>
 
+#include "vm.hpp"
+
 struct TypeMeta {
     size_t size = 0;
     size_t alignment = 0;
@@ -26,7 +28,7 @@ struct TypeDesc {
 
 using TypeInfo = std::unordered_map<std::string, TypeDesc>;
 
-TypeMeta get_builtin_type_meta(std::string_view name)
+static TypeMeta get_builtin_type_meta(std::string_view name)
 {
     if (name == "bool") {
         return { .size = 1, .alignment = 1 };
@@ -38,7 +40,7 @@ TypeMeta get_builtin_type_meta(std::string_view name)
     return {};
 }
 
-TypeMeta get_meta(const TypeInfo& type_info, const std::string& type_name)
+static TypeMeta get_meta(const TypeInfo& type_info, const std::string& type_name)
 {
     const auto builtin = get_builtin_type_meta(type_name);
     if (builtin.size) {
@@ -48,13 +50,13 @@ TypeMeta get_meta(const TypeInfo& type_info, const std::string& type_name)
     return type_info.at(type_name).meta;
 }
 
-size_t align(size_t offset, size_t alignment)
+static size_t align(size_t offset, size_t alignment)
 {
     const auto r = offset % alignment;
     return r > 0 ? offset + (alignment - r) : offset;
 }
 
-TypeMeta init_type_meta(TypeInfo& type_info, const std::string& name)
+static TypeMeta init_type_meta(TypeInfo& type_info, const std::string& name)
 {
     auto& desc = type_info[name];
     if (desc.meta.size) {
@@ -82,7 +84,7 @@ TypeMeta init_type_meta(TypeInfo& type_info, const std::string& name)
 }
 
 // Hard-Coded for now
-TypeInfo& get_type_info()
+static TypeInfo& get_type_info()
 {
     static TypeInfo type_info;
     if (type_info.empty()) {
@@ -126,14 +128,14 @@ TypeInfo& get_type_info()
 }
 
 template <typename T>
-T read(const std::byte* ptr)
+static T read(const std::byte* ptr)
 {
     T v;
     std::memcpy(&v, ptr, sizeof(T));
     return v;
 }
 
-void show_variable(const TypeInfo& type_info, const std::string& type_name,
+static void show_variable(const TypeInfo& type_info, const std::string& type_name,
     const std::string& var_name, const std::byte* data)
 {
     if (type_name == "bool") {
@@ -166,10 +168,74 @@ void show_variable(const TypeInfo& type_info, const std::string& type_name,
     }
 }
 
-void show_state_inspector(const void* state)
+void show_state_inspector(Vm* vm)
 {
     const auto& type_info = get_type_info();
     ImGui::Begin("State Inspector", nullptr, 0);
-    show_variable(type_info, "State", "state", reinterpret_cast<const std::byte*>(state));
+    show_variable(type_info, "State", "state", reinterpret_cast<const std::byte*>(vm->state));
+    ImGui::End();
+}
+
+void show_overlay(const Vm* vm)
+{
+    if (vm->mode == Vm::Mode::Advance) {
+        return;
+    }
+
+    const ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration
+        | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings
+        | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
+    const float PAD = 10.0f;
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImVec2 work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
+    ImVec2 window_pos = { work_pos.x + PAD, work_pos.y + PAD };
+    ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, ImVec2 { 0.0f, 0.0f });
+
+    ImGui::SetNextWindowBgAlpha(0.35f);
+    if (ImGui::Begin("overlay", nullptr, window_flags)) {
+        ImGui::Text("Mode: %s", Vm::to_string(vm->mode).data());
+        ImGui::Text("Current Frame: %u", vm->current_frame);
+        ImGui::Text("Last Frame: %u", vm->last_frame);
+        if (vm->replay_mark) {
+            ImGui::Text("Replay Mark: %u", *vm->replay_mark);
+        } else {
+            ImGui::Text("Replay Mark: none");
+        }
+
+        ImGui::Separator();
+        if (vm->mode == Vm::Mode::Pause) {
+            if (vm->current_frame == vm->last_frame) {
+                ImGui::Text("n: advance one frame");
+            } else {
+                ImGui::Text("n: skip 1 frame forwards");
+            }
+            ImGui::Text("shift+n: skip 20 frames forwards");
+            ImGui::Text("p: skip 1 frame backwards");
+            ImGui::Text("shift+p: skip 20 frames backwards");
+            ImGui::Text("e: skip to last frame");
+            ImGui::Text("c: continue from current frame");
+            ImGui::Text("r: replay from mark");
+            ImGui::Text("ctrl+r: replay from current frame");
+            if (vm->replay_mark) {
+                ImGui::Text("ctrl+m: jump to replay mark");
+            }
+            if (vm->replay_mark == vm->current_frame) {
+                ImGui::Text("m: unset replay mark");
+            } else {
+                ImGui::Text("m: set replay mark");
+            }
+            ImGui::Text("return: playback from here");
+        } else if (vm->mode == Vm::Mode::Playback) {
+            ImGui::Text("space: pause");
+        } else if (vm->mode == Vm::Mode::Replay) {
+            ImGui::Text("space: pause");
+            if (vm->replay_mark) {
+                ImGui::Text("r: replay from mark");
+            }
+        }
+        if (vm->replay_mark) {
+            ImGui::Text("reload file: replay from mark");
+        }
+    }
     ImGui::End();
 }
