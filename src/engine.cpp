@@ -26,6 +26,7 @@ static void reload_image(void* ctx, std::string_view path)
 extern "C" void* ng_alloc(size_t size)
 {
     auto ptr = malloc(size);
+    memset(ptr, 0, size);
     memtrack::track(ptr, size);
     return ptr;
 }
