@@ -34,6 +34,8 @@ static TypeMeta get_builtin_type_meta(std::string_view name)
         return { .size = 1, .alignment = 1 };
     } else if (name == "u32") {
         return { .size = 4, .alignment = 4 };
+    } else if (name == "timestamp_t") {
+        return { .size = 8, .alignment = 8 };
     } else if (name == "float") {
         return { .size = 4, .alignment = 4 };
     }
@@ -111,6 +113,7 @@ static TypeInfo& get_type_info()
                 FieldDesc { "is_friendly", "bool" },
                 FieldDesc { "alive", "bool" },
                 FieldDesc { "sprite", "u32" },
+                FieldDesc { "eaten_ts", "timestamp_t" },
             },
         };
         type_info["State"] = TypeDesc {
@@ -135,7 +138,7 @@ static T read(const std::byte* ptr)
     return v;
 }
 
-static void show_variable(const TypeInfo& type_info, const std::string& type_name,
+static void show_variable(Vm* vm, const TypeInfo& type_info, const std::string& type_name,
     const std::string& var_name, const std::byte* data)
 {
     if (type_name == "bool") {
@@ -144,6 +147,17 @@ static void show_variable(const TypeInfo& type_info, const std::string& type_nam
         ImGui::BulletText("(u32) %s: %u", var_name.c_str(), read<uint32_t>(data));
     } else if (type_name == "float") {
         ImGui::BulletText("(float) %s: %f", var_name.c_str(), read<float>(data));
+    } else if (type_name == "timestamp_t") {
+        const auto ts = read<uint64_t>(data);
+        const auto frame = static_cast<uint32_t>(ts >> 32);
+        const auto counter = static_cast<uint32_t>(ts & 0xffff'ffff);
+        ImGui::BulletText("(timestamp_t) %s: %u:%u", var_name.c_str(), frame, counter);
+        if (ts != 0) {
+            ImGui::SameLine();
+            if (ImGui::SmallButton("Go")) {
+                vm->seek_timestamp(ts);
+            }
+        }
     } else {
         if (ImGui::TreeNodeEx(var_name.c_str(), ImGuiTreeNodeFlags_DefaultOpen, "(%s) %s",
                 type_name.c_str(), var_name.c_str())) {
@@ -156,11 +170,11 @@ static void show_variable(const TypeInfo& type_info, const std::string& type_nam
                 if (field.array_size) {
                     for (size_t i = 0; i < field.array_size; ++i) {
                         const auto field_name = fmt::format("{}[{}]", field.name, i);
-                        show_variable(type_info, field.type, field_name,
+                        show_variable(vm, type_info, field.type, field_name,
                             data + field.offset + i * field_type_meta.size);
                     }
                 } else {
-                    show_variable(type_info, field.type, field.name, data + field.offset);
+                    show_variable(vm, type_info, field.type, field.name, data + field.offset);
                 }
             }
             ImGui::TreePop();
@@ -172,7 +186,7 @@ void show_state_inspector(Vm* vm)
 {
     const auto& type_info = get_type_info();
     ImGui::Begin("State Inspector", nullptr, 0);
-    show_variable(type_info, "State", "state", reinterpret_cast<const std::byte*>(vm->state));
+    show_variable(vm, type_info, "State", "state", reinterpret_cast<const std::byte*>(vm->state));
     ImGui::End();
 }
 

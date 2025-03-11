@@ -71,3 +71,12 @@ extern "C" void ng_break_internal(const char* file, int line)
     fmt::println("break from {}:{}", file, line);
     gamecode::ng_break();
 }
+
+extern "C" uint64_t ng_timestamp_internal(const char* file, int line)
+{
+    const auto ts = vm->next_timestamp();
+    if (vm->stop_timestamp == ts) {
+        ng_break_internal(file, line);
+    }
+    return ts;
+}

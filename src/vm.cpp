@@ -68,6 +68,18 @@ void Vm::seek(uint32_t frame_id)
 {
     memtrack::restore(frame_id);
     current_frame = frame_id;
+    stop_timestamp.reset();
+}
+
+void Vm::seek_timestamp(uint64_t ts)
+{
+    mode = Mode::Pause;
+    const auto frame_id = static_cast<uint32_t>(ts >> 32);
+    memtrack::restore(frame_id);
+    current_frame = frame_id;
+    stop_timestamp = ts;
+    gamecode::update(engine_state.game_code, state, engine_state.time, engine_state.dt);
+    // Do not reset stop_timestamp, because the stop timestamp might be in render!
 }
 
 void Vm::copy_most_recent_hot_to_current()
@@ -91,6 +103,11 @@ void Vm::copy_input_state(uint32_t source_frame_id)
     memtrack::restore_to(engine_state_track, source_frame_id,
         (uintptr_t)&engine_state.input_state - (uintptr_t)&engine_state,
         sizeof(platform::InputState), &engine_state.input_state);
+}
+
+uint64_t Vm::next_timestamp()
+{
+    return (static_cast<uint64_t>(current_frame) << 32) | ++next_timestamp_id;
 }
 
 bool Vm::update_advance(const platform::InputState& input_state, float dt)
@@ -153,6 +170,7 @@ void Vm::start_advance()
 {
     mode = Vm::Mode::Advance;
     replay_mark.reset();
+    stop_timestamp.reset();
 }
 
 void Vm::start_pause()
@@ -167,10 +185,12 @@ void Vm::start_replay(uint32_t start_frame_id)
     seek(start_frame_id);
     // Overwrite the just restored state with the most recent code
     copy_most_recent_hot_to_current();
+    stop_timestamp.reset();
 }
 
 void Vm::start_playback()
 {
     mode = Vm::Mode::Playback;
     replay_mark.reset();
+    stop_timestamp.reset();
 }

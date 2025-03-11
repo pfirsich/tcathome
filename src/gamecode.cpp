@@ -53,6 +53,8 @@ GameCode* load(const char* path)
     tcc_add_symbol(gc.tcc, "ng_draw_sprite", (const void*)ng_draw_sprite);
     tcc_add_symbol(gc.tcc, "ng_is_key_down", (const void*)ng_is_key_down);
     tcc_add_symbol(gc.tcc, "ng_random_float", (const void*)ng_randomf);
+    tcc_add_symbol(gc.tcc, "ng_break_internal", (const void*)ng_break_internal);
+    tcc_add_symbol(gc.tcc, "ng_timestamp_internal", (const void*)ng_timestamp_internal);
 
     if (tcc_relocate(gc.tcc) < 0) {
         fmt::println("relocate failed");

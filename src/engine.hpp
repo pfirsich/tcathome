@@ -15,3 +15,4 @@ extern "C" bool ng_is_key_down(const char* key);
 extern "C" int ng_key_pressed(const char* key);
 extern "C" float ng_randomf();
 extern "C" void ng_break_internal(const char* file, int line);
+extern "C" uint64_t ng_timestamp_internal(const char* file, int line);

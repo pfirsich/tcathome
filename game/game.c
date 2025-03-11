@@ -19,6 +19,7 @@ typedef struct {
     bool is_friendly; // true = can be eaten
     bool alive; // false = eaten
     u32 sprite;
+    timestamp_t eaten_ts;
 } Chicken;
 
 typedef struct {
@@ -85,6 +86,7 @@ void update(State* state, float t, float dt)
         float dist = sqrtf(dx * dx + dy * dy);
 
         if (c->is_friendly && dist < CHIK_EAT_RADIUS) {
+            c->eaten_ts = ng_timestamp;
             c->alive = false;
             continue;
         }
