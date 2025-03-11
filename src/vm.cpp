@@ -7,6 +7,22 @@
 #include "fswatcher.hpp"
 #include "memtrack.hpp"
 
+std::string_view Vm::to_string(Mode mode)
+{
+    switch (mode) {
+    case Mode::Advance:
+        return "Advance";
+    case Mode::Pause:
+        return "Pause";
+    case Mode::Playback:
+        return "Playback";
+    case Mode::Replay:
+        return "Replay";
+    default:
+        return "UNKNOWN";
+    }
+}
+
 static void reload_game_code(void* ctx, std::string_view path)
 {
     auto vm = (Vm*)ctx;
